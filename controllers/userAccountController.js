@@ -92,7 +92,7 @@ exports.FBRegister = function (req, res, next) {
     User.find({ 'fb.id': req.body.fb.id }).exec().then((users) => {
         if (users.length != 0) return next(new CodedError("Already registered", 400));
         return services.facebook.checkAccessToken(req.body.fb.accessToken, req.body.fb.id);
-    }).then(function (isTokenValid) {
+    }).then((isTokenValid) => {
         if (!isTokenValid) return next(new CodedError("Not authorized", 403));
         let user = new User({
             alias: alias,

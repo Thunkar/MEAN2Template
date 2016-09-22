@@ -43,10 +43,6 @@ function generateToken() {
     return token;
 };
 
-function generateAccessToken() {
-    return { value: generateToken(), expiration: new Date().addDays(config.tokenExpiration) };
-};
-
 function generateSaltedPassword(password, iterations) {
     const salt = generateToken();
     return new Promise((resolve, reject) => {
@@ -68,29 +64,11 @@ function validateSaltedPassword(password, salt, hash, iterations) {
     });
 };
 
-function auth(type, req, res, next) {
-    if (type == "user")
-        var query = User.findOne({ alias: req.session.user.alias });
-    query.exec().then((user) => {
-        if (!user) {
-            return next(new CodedError("User does not exist", 404));
-        }
-        req[type] = user;
-        const sentToken = req.get("accessToken");
-        if (sentToken == user.accessToken.value && moment(user.accessToken.expiration).isAfter(moment())) {
-            next();
-        }
-        else {
-            return next(new CodedError("Not authorized", 403));
-        }
-    }, (err) => {
-        return next(err);
-    });
+function auth(req, res, next) {
+    if(!req.session.user) return next(new CodedError("Not authorized", 403));
+    return next();
 };
 
-exports.authenticateUserAndContinue = function (req, res, next) {
-    return auth("user", req, res, next);
-};
 
 
 exports.SHA256 = SHA256;
@@ -99,3 +77,4 @@ exports.generateRandomPassword = generateRandomPassword;
 exports.generateToken = generateToken;
 exports.generateAccessToken = generateAccessToken;
 exports.validateSaltedPassword = validateSaltedPassword;
+exports.auth = auth;

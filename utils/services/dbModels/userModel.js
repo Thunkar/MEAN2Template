@@ -17,8 +17,6 @@ const userSchema = new Schema({
     },
     hasPassword: { type: Boolean, default: true },
     mergedWithFB: { type: Boolean, default: false },
-    city: { type: String, default: "" },
-    college: { type: String, default: "" },
     email: { type: String, index: { unique: true, sparse: true, dropDups: true } },
     name: { type: String, default: "" },
     pwd: {
@@ -26,12 +24,7 @@ const userSchema = new Schema({
         salt: { type: String, default: "" },  
         iterations: { type: Number, default: 10000 }
     },
-    accessToken: {
-        value: { type: String, default: "" },
-        expiration: { type: Date, default: Date.now }
-    },
-    profilePic: { type: String, default: "" },
-    privacy: { type: Boolean, default: false }
+    profilePic: { type: String, default: "" }
 });
 
 mongoose.model('UserModel', userSchema);

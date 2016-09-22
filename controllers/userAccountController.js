@@ -10,6 +10,14 @@ const services = require("../utils/services.js"),
 
 const systemLogger = winston.loggers.get('system');
 
+function mapBasicUser(user) {
+    return {
+        _id: user.id,
+        alias: user.alias,
+        fb: user.fb
+    }
+}
+
 exports.checkEmail = function (req, res, next) {
     if (!req.query.email || req.query.email == "" || req.query.email.indexOf(" ") != -1 || req.query.email.indexOf("@") == -1) return next(new CodedError("Invalid email", 400));
     User.findOne({ email: req.query.email }).exec().then((user) => {
@@ -34,22 +42,21 @@ exports.checkAlias = function (req, res, next) {
 exports.regUser = function (req, res, next) {
     const email = req.body.email.trim();
     if (!email || email == "" || email.indexOf(" ") != -1 || email.indexOf("@") == -1) return next(new CodedError("Invalid email", 400));
+    var user;
     authController.generateSaltedPassword(req.body.password.toLowerCase(), config.pwdIterations).then((saltedPassword) => {
-        let user = new User({
-            alias: alias,
-            slug: slug(alias),
-            city: req.body.city,
-            college: req.body.college,
+        user = new User({
+            alias: req.body.alias,
+            slug: slug(req.body.alias),
             email: email,
             name: name,
             pwd: saltedPassword,
             hasPassword: true,
-            accessToken: authController.generateAccessToken(),
-            privacy: req.body.privacy
         });
         return user.save();
-    }).then((user) => {
-        return res.status(200).send(user.accessToken);
+    }).then(() => {
+        var userToSend = mapBasicUser(user);
+        req.session.user = userToSend;
+        return res.status(200).send(userToSend);
     }, (err) => {
         return next(err);
     });
@@ -63,25 +70,9 @@ exports.login = function (req, res, next) {
         return authController.validateSaltedPassword(req.body.password, user.pwd.salt, user.pwd.hash, user.pwd.iterations);
     }).then((result) => {
         if (!result) return next(new CodedError("Not authorized", 403));
-        if (user.accessToken && moment(user.accessToken.expiration).isAfter(moment()))
-            user.accessToken.expiration = new Date().addDays(config.tokenExpiration);
-        else
-            user.accessToken = authController.generateAccessToken();
-        return user.save();
-    }).then(() => {
-        return res.status(200).jsonp(user.accessToken);
-    }, (err) => {
-        return next(err);
-    });
-};
-
-exports.renewAccessToken = function (req, res, next) {
-    User.findOne({ alias: req.get("alias").toLowerCase() }).exec().then((user) => {
-        if (!user) return next(new CodedError("Not found", 404));
-        user.accessToken.expiration = new Date().addDays(config.tokenExpiration);
-        return user.save();
-    }).then((user) => {
-        return res.status(200).jsonp(user.accessToken);
+        var userToSend = mapBasicUser(user);
+        req.session.user = userToSend;
+        return res.status(200).jsonp(result);
     }, (err) => {
         return next(err);
     });
@@ -89,44 +80,40 @@ exports.renewAccessToken = function (req, res, next) {
 
 exports.FBRegister = function (req, res, next) {
     if (!req.body.fb) return next(new CodedError("Bad request", 400));
+    var user;
     User.find({ 'fb.id': req.body.fb.id }).exec().then((users) => {
         if (users.length != 0) return next(new CodedError("Already registered", 400));
         return services.facebook.checkAccessToken(req.body.fb.accessToken, req.body.fb.id);
     }).then((isTokenValid) => {
         if (!isTokenValid) return next(new CodedError("Not authorized", 403));
-        let user = new User({
-            alias: alias,
-            slug: slug(alias),
+        user = new User({
+            alias: req.body.alias,
+            slug: slug(req.body.alias),
             fb: req.body.fb,
             mergedWithFB: true,
             hasPassword: false,
-            city: req.body.city,
-            name: req.body.fb.name,
-            accessToken: authController.generateAccessToken(),
-            privacy: req.body.privacy
+            name: req.body.fb.name
         });
         return user.save();
     }).then((user) => {
-        return res.status(200).jsonp({ alias: user.alias, accessToken: user.accessToken });
+        return res.status(200).jsonp(mapBasicUser(user));
     }, (err) => {
         return next(err);
     });
 };
 
 exports.FBLogin = function (req, res, next) {
-    User.findOne({ 'fb.id': req.body.fb.id }).exec().then((user) => {
+    var user;
+    User.findOne({ 'fb.id': req.body.fb.id }).exec().then((storedUser) => {
+        user = storedUser;
         if (!user) return next(new CodedError("Not found", 404));
         if (!user.mergedWithFB) return next(new CodedError("Not merged", 400));
         return services.facebook.checkAccessToken(req.body.fb.accessToken, req.body.fb.id);
     }).then((isTokenValid) => {
-        if (err || !isTokenValid) return next(new CodedError("Not authorized", 403));
-        if (user.accessToken && moment(user.accessToken.expiration).isAfter(moment()))
-            user.accessToken.expiration = new Date().addDays(config.tokenExpiration);
-        else
-            user.accessToken = authController.generateAccessToken();
-        return user.save();
-    }).then((err) => {
-        return res.status(200).jsonp({ alias: user.alias, accessToken: user.accessToken });
+        if (!isTokenValid) return next(new CodedError("Not authorized", 403));
+        var userToSend = mapBasicUser(user);
+        req.session.user = userToSend;
+        return res.status(200).jsonp(userToSend);
     }, (err) => {
         return next(err);
     });
@@ -182,11 +169,7 @@ exports.FBUnMerge = function (req, res, next) {
 exports.updateProfile = function (req, res, next) {
     let user = req.user;
     user.name = req.body.name;
-    user.status = req.body.status;
-    user.college = req.body.college;
     user.email = req.body.email;
-    user.privacy = req.body.privacy;
-    user.city = req.body.city;
     if (!user.name || user.name == "") user.name = user.alias;
     if (!user.mergedWithFB && (!user.email || user.email == "")) return next(new CodedError("Not valid user", 400));
     user.save().then(() => {

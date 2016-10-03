@@ -52,4 +52,8 @@ gulp.task('config:example', (done) => {
   fs.writeFile('example_config.cnf', JSON.stringify(example, null, 4), done);
 })
 
+gulp.task('watch:frontend', function () {
+  gulp.watch('frontend/src/**/*',gulp.series('compile'));
+});
+
 gulp.task('build', gulp.series('clean', gulp.parallel('compile', 'copy:indlibs', 'copy:assets', 'copy:foldlibs')));

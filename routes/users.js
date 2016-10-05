@@ -14,10 +14,9 @@ router.route('/login').post(userAccountController.login);
 router.route('/fbregister').post(userAccountController.FBRegister);
 router.route('/fblogin').post(userAccountController.FBLogin);
 
-router.use(authController.authenticateUserAndContinue);
+router.use(authController.auth);
 
 router.route('/changepassword').post(userAccountController.changePassword);
-router.route('/renewaccesstoken').post(userAccountController.renewAccessToken);
 router.route('/update').post(userAccountController.updateProfile);
 router.route('/fbmerge').post(userAccountController.FBMerge);
 router.route('/fbunmerge').post(userAccountController.FBUnMerge);

@@ -75,6 +75,5 @@ exports.SHA256 = SHA256;
 exports.generateSaltedPassword = generateSaltedPassword;
 exports.generateRandomPassword = generateRandomPassword;
 exports.generateToken = generateToken;
-exports.generateAccessToken = generateAccessToken;
 exports.validateSaltedPassword = validateSaltedPassword;
 exports.auth = auth;

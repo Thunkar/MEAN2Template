@@ -32,3 +32,6 @@ logs
 .vscode
 config.cnf
 example_config.cnf
+uploaded/*
+typings/
+frontend/src/typings

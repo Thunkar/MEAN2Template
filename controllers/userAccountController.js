@@ -10,20 +10,28 @@ const services = require("../utils/services.js"),
 
 const systemLogger = winston.loggers.get('system');
 
+const storagePath = config.uploadedBase + '/users';
+const baseFilesURL = config.fileServer + '/files/users/';
+
 function mapBasicUser(user) {
     return {
         _id: user.id,
         alias: user.alias,
-        fb: user.fb
+        role: user.role,
+        name: user.name,
+        email: user.email,
+        profilePic: baseFilesURL + user.slug + '/' + (user.profilePic || 'default.png'),
     }
 }
+
+exports.mapBasicUser = mapBasicUser;
 
 exports.checkEmail = function (req, res, next) {
     if (!req.query.email || req.query.email == "" || req.query.email.indexOf(" ") != -1 || req.query.email.indexOf("@") == -1) return next(new CodedError("Invalid email", 400));
     User.findOne({ email: req.query.email }).exec().then((user) => {
         if (user) return next(new CodedError("Duplicated email", 403));
         return res.status(200).send("Ok");
-    }, (err) => {
+    }).catch((err) => {
         return next(err);
     });
 };
@@ -34,7 +42,7 @@ exports.checkAlias = function (req, res, next) {
     User.findOne({ $or: [{ slug: slug }, { alias: req.query.alias }] }).exec().then((user) => {
         if (user) return next(new CodedError("Duplicated alias", 403));
         return res.status(200).send("Ok");
-    }, (err) => {
+    }).catch((err) => {
         return next(err);
     });
 };
@@ -43,21 +51,30 @@ exports.regUser = function (req, res, next) {
     const email = req.body.email.trim();
     if (!email || email == "" || email.indexOf(" ") != -1 || email.indexOf("@") == -1) return next(new CodedError("Invalid email", 400));
     var user;
+    var image = req.files && req.files.image ? req.files.image[0] : null;
     authController.generateSaltedPassword(req.body.password.toLowerCase(), config.pwdIterations).then((saltedPassword) => {
         user = new User({
             alias: req.body.alias,
             slug: slug(req.body.alias),
+            profilePic: image ? image.filename : undefined,
             email: email,
             name: name,
             pwd: saltedPassword,
             hasPassword: true,
         });
-        return user.save();
+        var tasks = [];
+        if (image) {
+            tasks.push(services.fileUtils.ensureExists(storagePath + '/' + user.slug).then(() => {
+                return services.fileUtils.moveFile(config.uploadedBase + '/' + image.filename, storagePath + '/' + user.slug + '/' + image.filename);
+            }));
+        }
+        tasks.push(user.save());
+        return Promise.all(tasks);
     }).then(() => {
         var userToSend = mapBasicUser(user);
         req.session.user = userToSend;
         return res.status(200).send(userToSend);
-    }, (err) => {
+    }).catch((err) => {
         return next(err);
     });
 };
@@ -73,7 +90,7 @@ exports.login = function (req, res, next) {
         var userToSend = mapBasicUser(user);
         req.session.user = userToSend;
         return res.status(200).jsonp(result);
-    }, (err) => {
+    }).catch((err) => {
         return next(err);
     });
 };
@@ -97,7 +114,7 @@ exports.FBRegister = function (req, res, next) {
         return user.save();
     }).then((user) => {
         return res.status(200).jsonp(mapBasicUser(user));
-    }, (err) => {
+    }).catch((err) => {
         return next(err);
     });
 };
@@ -114,7 +131,7 @@ exports.FBLogin = function (req, res, next) {
         var userToSend = mapBasicUser(user);
         req.session.user = userToSend;
         return res.status(200).jsonp(userToSend);
-    }, (err) => {
+    }).catch((err) => {
         return next(err);
     });
 };
@@ -174,17 +191,20 @@ exports.updateProfile = function (req, res, next) {
     if (!user.mergedWithFB && (!user.email || user.email == "")) return next(new CodedError("Not valid user", 400));
     user.save().then(() => {
         return res.status(200).send("Profile updated");
-    }, (err) => {
+    }).catch((err) => {
         return next(err);
     });
 };
 
 exports.changePassword = function (req, res, next) {
-    var user = req.user;
-    if (user.hasPassword && !req.body.oldPassword) return next(new CodedError("No old password", 403));
-    authController.validateSaltedPassword(req.body.oldPassword, user.pwd.salt, user.pwd.hash, user.pwd.iterations).then((result) => {
-        if (!result) return next(new CodedError("Bad old password", 403));
-        if (!req.body.password || req.body.password == "") return next(new CodedError("Bad new password", 400));
+    var user;
+    User.find({ alias: req.body.alias }).exec().then((result) => {
+        user = result;
+        if (user.hasPassword && !req.body.oldPassword) throw new CodedError("No old password", 403);
+        return authController.validateSaltedPassword(req.body.oldPassword, user.pwd.salt, user.pwd.hash, user.pwd.iterations);
+    }).then((result) => {
+        if (!result) throw new CodedError("Bad old password", 403);
+        if (!req.body.password || req.body.password == "") throw new CodedError("Bad new password", 400);
         return authController.generateSaltedPassword(req.body.password, config.pwdIterations);
     }).then((saltedPassword) => {
         user.pwd = saltedPassword;
@@ -192,7 +212,7 @@ exports.changePassword = function (req, res, next) {
         return user.save();
     }).then(() => {
         return res.status(200).send("Password updated");
-    }, (err) => {
+    }).catch((err) => {
         return next(err);
     });
 };
@@ -201,8 +221,8 @@ exports.restoreUserPassword = function (req, res) {
     var user;
     User.findOne({ alias: req.body.alias.toLowerCase() }).exec().then((storedUser) => {
         user = storedUser;
-        if (!user) return next(new CodedError("Not found", 404));
-        if (user.email != req.body.email) return next(new CodedError("Not valid email", 400));
+        if (!user) throw new CodedError("Not found", 404);
+        if (user.email != req.body.email) throw new CodedError("Not valid email", 400);
         var newPassword = authController.generatePassword();
         return authController.SHA256(newPassword);
     }).then((hash) => {
@@ -222,7 +242,7 @@ exports.restoreUserPassword = function (req, res) {
     }).then((info) => {
         systemLogger.info("Message sent: " + info.response);
         return res.status(200).send("Success");
-    }, (err) => {
+    }).catch((err) => {
         return next(err);
     });
 };

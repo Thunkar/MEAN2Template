@@ -49,7 +49,10 @@ exports.listFiles = function (path) {
 exports.deleteFile = function (path) {
     return new Promise(function (resolve, reject) {
         fs.unlink(path, function (err) {
-            if (err) return reject(err);
+            if (err) {
+                if (err.code == 'ENOENT') return resolve();
+                else return reject(err);
+            }
             else return resolve();
         });
     });
@@ -77,6 +80,15 @@ exports.writeFile = function (data, path) {
     })
 }
 
+exports.access = function(path) {
+    return new Promise((resolve, reject) =>{
+        fs.access(path, (err) => {
+            if(err) return reject(err);
+            else return resolve();
+        })
+    });
+}
+
 exports.init = function () {
-    return exports.ensureExists('./logs')
+    return exports.ensureExists('./logs').then(() => { return exports.ensureExists('./uploaded') });
 }

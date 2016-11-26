@@ -24,7 +24,8 @@ const userSchema = new Schema({
         salt: { type: String, default: "" },  
         iterations: { type: Number, default: 10000 }
     },
-    profilePic: { type: String, default: "" }
+    profilePic: { type: String, default: "" },
+    role: { type: String, default: "user" }
 });
 
 mongoose.model('UserModel', userSchema);

@@ -7,12 +7,15 @@
   var map = {
     'app':                        'app', // 'dist',
     '@angular':                   'lib/@angular',
-    'rxjs':                       'lib/rxjs'
+    'rxjs':                       'lib/rxjs',
+    'ng2-interceptors': 'lib/ng2-interceptors',
+    'crypto-js':'lib/crypto-js',
+    'ng2-bootstrap':'lib/ng2-bootstrap',
+    'moment':'lib/moment'
   };
   // packages tells the System loader how to load when no filename and/or no extension
   var packages = {
-    'app':                        { main: 'main.js',  defaultExtension: 'js' },
-    'rxjs':                       { defaultExtension: 'js' }
+    'app':                        { main: 'main.js',  defaultExtension: 'js' }
   };
   var ngPackageNames = [
     'common',
@@ -35,9 +38,24 @@
     packages['@angular/'+pkgName] = { main: 'bundles/' + pkgName + '.umd.js', defaultExtension: 'js' };
   }
   // Most environments should use UMD; some (Karma) need the individual index files
-  var setPackageConfig = System.packageWithIndex ? packIndex : packUmd;
+  var setPackageConfig = packUmd;
   // Add package entries for angular packages
   ngPackageNames.forEach(setPackageConfig);
+  packages['ng2-interceptors']= {
+    main: 'index'
+  };
+  packages['crypto-js']= {
+    main: 'index'
+  };
+  packages['moment']= {
+    main: 'moment'
+  };
+  packages['rxjs']= {
+    main: 'bundles/Rx.js'
+  };
+  packages['ng2-bootstrap']= {
+    main: 'bundles/ng2-bootstrap.umd.min.js'
+  };
   var config = {
     map: map,
     packages: packages

@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "crypto-js": "github:nozzlegear/crypto-js.d.ts"
+  },
+  "globalDependencies": {
+    "jquery": "registry:dt/jquery#1.10.0+20160929162922"
+  }
+}

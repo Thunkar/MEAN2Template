@@ -1,23 +1,39 @@
-<html>
-  <head>
-    <title>Angular 2 QuickStart</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="css/styles.css">
-    <!-- 1. Load libraries -->
-     <!-- Polyfill(s) for older browsers -->
-    <script src="lib/shim.min.js"></script>
-    <script src="lib/zone.js"></script>
-    <script src="lib/Reflect.js"></script>
-    <script src="lib/system.src.js"></script>
-    <!-- 2. Configure SystemJS -->
-    <script src="systemjs.config.js"></script>
-    <script>
-      System.import('app').catch(function(err){ console.error(err); });
+<head>
+  <base href="/">
+  <title>Angular 2 QuickStart</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="assets/transformicons.css">
+  <link rel="stylesheet" href="lib/swipebox/src/css/swipebox.min.css">
+  <!-- 1. Load libraries -->
+  <!-- Polyfill(s) for older browsers -->
+  <script src="lib/shim.min.js"></script>
+  <script src="lib/zone.js"></script>
+  <script src="lib/Reflect.js"></script>
+  <script src="lib/system.src.js"></script>
+
+  <!-- 2. Configure SystemJS -->
+  <script src="systemjs.config.js"></script>
+
+  <script src="assets/transformicons.js"></script>
+  <script src="lib/jquery/dist/jquery.min.js"></script>
+  <script src="lib/swipebox/src/js/jquery.swipebox.js"></script>
+  <script>
+      System.import('app/main.js').catch(function(err){ console.error(err); });
     </script>
-  </head>
-  <!-- 3. Display the application -->
-  <body>
-    <app>Loading...</app>
-  </body>
+  <script src="bundle/app/main.js"> </script>
+  <!-- Bootstrap! -->
+  <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css">
+</head>
+<!-- 3. Display the application -->
+
+<body>
+  <div class="container-fluid">
+    <div class="">
+      <app>Preparing...</app>
+    </div>
+  </div>
+</body>
+
 </html>

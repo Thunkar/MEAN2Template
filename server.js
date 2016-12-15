@@ -31,6 +31,10 @@ services.init().then(() => {
 
     app.use(express.static(__dirname + "/frontend/dist"));
 
+    var resultController = require('./controllers/resultController.js');
+
+    app.use(resultController.genericErrorHandler);
+
     app.listen(services.config.port, () => {
         systemLogger.info(services.config.serverName + " worker running");
     });

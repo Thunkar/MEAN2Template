@@ -8,7 +8,7 @@
     "email": "gregojquiros@gmail.com"
   },
   "dependencies": {
-   "@angular/common": "~2.1.2",
+    "@angular/common": "~2.1.2",
     "@angular/compiler": "~2.1.2",
     "@angular/core": "~2.1.2",
     "@angular/forms": "~2.1.2",
@@ -27,6 +27,7 @@
     "crypto-js": "^3.1.7",
     "express": "^4.13.3",
     "express-session": "^1.14.0",
+    "gulp-less": "^3.3.0",
     "gulp-systemjs-builder": "^0.15.0",
     "jquery": "^2.0.3",
     "mkdirp": "^0.5.1",

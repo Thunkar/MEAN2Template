@@ -80,10 +80,13 @@ gulp.task('compile', () => {
     .pipe(gulp.dest('frontend/dist'));
 });
 
+
 gulp.task('copy:foldlibs', () => {
   return gulp.src(['node_modules/@angular/**/*', 'node_modules/rxjs/**/*',
-    'node_modules/bootstrap/**/*', 'node_modules/ng2-interceptors/**/*',
-    'node_modules/ng2-bootstrap/**/*', 'node_modules/crypto-js/**/*',
+    'node_modules/bootstrap/**/*', 'node_modules/scrollreveal/**/*',
+    'node_modules/ng2-scrollspy/**/*', 'node_modules/ng2-scrollreveal/**/*', 'node_modules/ng2-interceptors/**/*',
+    'node_modules/ng2-bootstrap/**/*', 'node_modules/crypto-js/**/*',  
+    'node_modules/ng2-page-scroll/**/*','node_modules/angular2-google-maps/**/*',
     'node_modules/swipebox/**/*', 'node_modules/moment/**/*', 'node_modules/jquery/**/*'],
     { base: "./node_modules/" })
     .pipe(gulp.dest('frontend/dist/lib'));
@@ -98,6 +101,7 @@ gulp.task('copy:indlibs', () => {
   ])
     .pipe(gulp.dest('frontend/dist/lib'))
 });
+
 
 gulp.task('copy:assets', () => {
   return gulp.src(['frontend/src/**/*', 'frontend/src/index.html', '!frontend/src/**/*.less','!frontend/src/**/*.ts', '!frontend/src/typings.json'], { base: './frontend/src/' })
@@ -179,10 +183,13 @@ gulp.task('config:mail', () => {
   return gulp.src('initialData/mail/**/*').pipe(gulp.dest('uploaded/mail'));
 });
 
-gulp.task('less', function() {
-    return gulp.src('frontend/src/**/*.less', { base: './frontend/src/' })
-        .pipe(less())
-        .pipe(gulp.dest('frontend/dist'))
+
+gulp.task('less', function () {
+  return gulp.src('frontend/src/**/*.less', { base: './frontend/src/' })
+    .pipe(less()).on('error', (e) => { 
+    console.log(e);
+  })
+    .pipe(gulp.dest('frontend/dist'));
 });
 
 

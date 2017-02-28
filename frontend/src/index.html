@@ -1,8 +1,12 @@
 <head>
   <base href="/">
-  <title>Angular 2 QuickStart</title>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>Mean2Template</title>
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="assets/transformicons.css">
   <link rel="stylesheet" href="lib/swipebox/src/css/swipebox.min.css">
@@ -19,21 +23,32 @@
   <script src="assets/transformicons.js"></script>
   <script src="lib/jquery/dist/jquery.min.js"></script>
   <script src="lib/swipebox/src/js/jquery.swipebox.js"></script>
+
+  <!-- Bootstrap Core CSS -->
+  <link href="assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom Fonts -->
+  <link href="assets/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+  <script src="bundle/app/main.js"></script>
+
   <script>
-      System.import('app/main.js').catch(function(err){ console.error(err); });
-    </script>
-  <script src="bundle/app/main.js"> </script>
-  <!-- Bootstrap! -->
-  <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css">
+    System.import('app/main.js').catch(function (err) { console.error(err); });
+  </script>
 </head>
 <!-- 3. Display the application -->
 
 <body>
-  <div class="container-fluid">
-    <div class="">
-      <app>Preparing...</app>
-    </div>
-  </div>
+
+
+  <app></app>
+
+  <!-- Bootstrap Core JavaScript -->
+  <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+
+  <!-- Plugin JavaScript -->
+  <script src="assets/scrollreveal/scrollreveal.min.js"></script>
+
 </body>
 
 </html>

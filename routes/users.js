@@ -7,8 +7,6 @@
 
 let router = express.Router();
 
-router.route('/checkalias').post(userAccountController.checkAlias);
-router.route('/checkemail').post(userAccountController.checkEmail);
 router.route('/restorepassword').post(userAccountController.restoreUserPassword);
 router.route('/register').post(upload.fields([{ name: "image" }]), userAccountController.regUser);
 router.route('/login').post(userAccountController.login);

@@ -116,7 +116,7 @@ exports.FBLogin = function (req, res, next) {
 
 exports.FBMerge = function (req, res, next) {
     var user;
-    User.find({ alias: req.session.user.alias.toLowerCase() }).exec().then((storedUser) => {
+    User.find({ alias: req.session.user.alias }).exec().then((storedUser) => {
         if (!storedUser) throw new CodedError("Not found", 404);
         user = storedUser;
         if (user.mergedWithFB) return next(new CodedError("Already merged", 400));
@@ -144,7 +144,7 @@ exports.FBMerge = function (req, res, next) {
 
 exports.FBUnMerge = function (req, res, next) {
     var user;
-    User.find({ alias: req.session.user.alias.toLowerCase() }).exec().then((storedUser) => {
+    User.find({ alias: req.session.user.alias }).exec().then((storedUser) => {
         if (!storedUser) throw new CodedError("Not found", 404);
         user = storedUser;
         if (!user.pwd || !user.mergedWithFB) return next(new CodedError("Not merged", 400));
@@ -169,7 +169,7 @@ exports.FBUnMerge = function (req, res, next) {
 
 exports.updateProfile = function (req, res, next) {
     var user;
-    User.find({ alias: req.session.user.alias.toLowerCase() }).exec().then((storedUser) => {
+    User.find({ alias: req.session.user.alias }).exec().then((storedUser) => {
         if (!storedUser) throw new CodedError("Not found", 404);
         user = storedUser;
         user.name = req.body.name;

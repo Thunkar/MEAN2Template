@@ -26,36 +26,14 @@ function mapBasicUser(user) {
 
 exports.mapBasicUser = mapBasicUser;
 
-exports.checkEmail = function (req, res, next) {
-    if (!req.query.email || req.query.email == "" || req.query.email.indexOf(" ") != -1 || req.query.email.indexOf("@") == -1) return next(new CodedError("Invalid email", 400));
-    User.findOne({ email: req.query.email }).exec().then((user) => {
-        if (user) return next(new CodedError("Duplicated email", 403));
-        return res.status(200).send("Ok");
-    }).catch((err) => {
-        return next(err);
-    });
-};
-
-exports.checkAlias = function (req, res, next) {
-    var slug = slug(req.query.alias);
-    if (!slug) return next(new CodedError("Invalid alias", 400));
-    User.findOne({ $or: [{ slug: slug }, { alias: req.query.alias }] }).exec().then((user) => {
-        if (user) return next(new CodedError("Duplicated alias", 403));
-        return res.status(200).send("Ok");
-    }).catch((err) => {
-        return next(err);
-    });
-};
-
 exports.regUser = function (req, res, next) {
     const email = req.body.email.trim();
-    if (!email || email == "" || email.indexOf(" ") != -1 || email.indexOf("@") == -1) return next(new CodedError("Invalid email", 400));
     var user;
     var image = req.files && req.files.image ? req.files.image[0] : null;
     authController.generateSaltedPassword(req.body.password.toLowerCase(), config.pwdIterations).then((saltedPassword) => {
         user = new User({
-            alias: req.body.alias,
-            slug: slug(req.body.alias),
+            alias: req.body.alias.toLowerCase(),
+            slug: slug(req.body.alias.toLowerCase()),
             profilePic: image ? image.filename : undefined,
             email: email,
             name: name,
@@ -89,7 +67,7 @@ exports.login = function (req, res, next) {
         if (!result) return next(new CodedError("Not authorized", 403));
         var userToSend = mapBasicUser(user);
         req.session.user = userToSend;
-        return res.status(200).jsonp(result);
+        return res.status(200).jsonp(userToSend);
     }).catch((err) => {
         return next(err);
     });
@@ -104,8 +82,8 @@ exports.FBRegister = function (req, res, next) {
     }).then((isTokenValid) => {
         if (!isTokenValid) return next(new CodedError("Not authorized", 403));
         user = new User({
-            alias: req.body.alias,
-            slug: slug(req.body.alias),
+            alias: req.body.alias.toLowerCase(),
+            slug: slug(req.body.alias.toLowerCase()),
             fb: req.body.fb,
             mergedWithFB: true,
             hasPassword: false,
@@ -137,11 +115,14 @@ exports.FBLogin = function (req, res, next) {
 };
 
 exports.FBMerge = function (req, res, next) {
-    var user = req.user;
-    if (!user) return next(new CodedError("Not found", 404));
-    if (user.mergedWithFB) return next(new CodedError("Already merged", 400));
-    if (!req.body.fb) return next(new CodedError("Bad request", 400));
-    User.find({ 'fb.id': req.body.fb.id }).exec().then((users) => {
+    var user;
+    User.find({ alias: req.session.user.alias.toLowerCase() }).exec().then((storedUser) => {
+        if (!storedUser) throw new CodedError("Not found", 404);
+        user = storedUser;
+        if (user.mergedWithFB) return next(new CodedError("Already merged", 400));
+        if (!req.body.fb) return next(new CodedError("Bad request", 400));
+        return User.find({ 'fb.id': req.body.fb.id }).exec();
+    }).then((users) => {
         if (users.length != 0) return next(new CodedError("Already merged", 400));
         return authController.validateSaltedPassword(req.body.password.toLowerCase(), user.pwd.salt, user.pwd.hash, user.pwd.iterations);
     }).then((result) => {
@@ -162,12 +143,15 @@ exports.FBMerge = function (req, res, next) {
 };
 
 exports.FBUnMerge = function (req, res, next) {
-    var user = req.user;
-    if (!user) return next(new CodedError("Not found", 404));
-    if (!user.pwd || !user.mergedWithFB) return next(new CodedError("Not merged", 400));
-    if (!req.body.fb) return next(new CodedError("Bad request", 400));
-    if (req.body.fb.id != user.fb.id) return next(new CodedError("Bad request", 400));
-    authController.validateSaltedPassword(req.body.password, user.pwd.salt, user.pwd.hash, user.pwd.iterations).then((result) => {
+    var user;
+    User.find({ alias: req.session.user.alias.toLowerCase() }).exec().then((storedUser) => {
+        if (!storedUser) throw new CodedError("Not found", 404);
+        user = storedUser;
+        if (!user.pwd || !user.mergedWithFB) return next(new CodedError("Not merged", 400));
+        if (!req.body.fb) return next(new CodedError("Bad request", 400));
+        if (req.body.fb.id != user.fb.id) return next(new CodedError("Bad request", 400));
+        return authController.validateSaltedPassword(req.body.password, user.pwd.salt, user.pwd.hash, user.pwd.iterations);
+    }).then((result) => {
         if (!result) return next(new CodedError("Not authorized", 403));
         return services.facebook.checkAccessToken(req.body.fb.accessToken, req.body.fb.id);
     }).then((isTokenValid) => {
@@ -184,12 +168,16 @@ exports.FBUnMerge = function (req, res, next) {
 };
 
 exports.updateProfile = function (req, res, next) {
-    let user = req.user;
-    user.name = req.body.name;
-    user.email = req.body.email;
-    if (!user.name || user.name == "") user.name = user.alias;
-    if (!user.mergedWithFB && (!user.email || user.email == "")) return next(new CodedError("Not valid user", 400));
-    user.save().then(() => {
+    var user;
+    User.find({ alias: req.session.user.alias.toLowerCase() }).exec().then((storedUser) => {
+        if (!storedUser) throw new CodedError("Not found", 404);
+        user = storedUser;
+        user.name = req.body.name;
+        user.email = req.body.email;
+        if (!user.name || user.name == "") user.name = user.alias;
+        if (!user.mergedWithFB && (!user.email || user.email == "")) throw new CodedError("Not valid user", 400);
+        return user.save();
+    }).then(() => {
         return res.status(200).send("Profile updated");
     }).catch((err) => {
         return next(err);
@@ -198,8 +186,8 @@ exports.updateProfile = function (req, res, next) {
 
 exports.changePassword = function (req, res, next) {
     var user;
-    User.find({ alias: req.body.alias }).exec().then((result) => {
-        user = result;
+    User.find({ alias: req.body.alias.toLowerCase() }).exec().then((storedUser) => {
+        user = storedUser;
         if (user.hasPassword && !req.body.oldPassword) throw new CodedError("No old password", 403);
         return authController.validateSaltedPassword(req.body.oldPassword, user.pwd.salt, user.pwd.hash, user.pwd.iterations);
     }).then((result) => {
@@ -217,7 +205,7 @@ exports.changePassword = function (req, res, next) {
     });
 };
 
-exports.restoreUserPassword = function (req, res) {
+exports.restoreUserPassword = function (req, res, next) {
     var user;
     User.findOne({ alias: req.body.alias.toLowerCase() }).exec().then((storedUser) => {
         user = storedUser;

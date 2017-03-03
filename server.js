@@ -6,11 +6,10 @@
 
 services.init().then(() => {
 
-    var systemLogger = winston.loggers.get('system');
+    var systemLogger = winston.loggers.get('system'),
+        config = services.config;
 
     services.fileUtils.ensureExists('./logs').then((err) => { if (err) systemLogger.error(err.message) });
-
-    var users = require('./routes/users.js');
 
     app.use(bodyParser.json({ limit: '50mb' }));
 
@@ -27,9 +26,22 @@ services.init().then(() => {
         });
     }
 
-    app.use("/api/users", users);
+    services.fileUtils.listFiles('./routes').then((routes) => {
+        routes.forEach((route) => {
+            app.use(config.mountPoint + '/api/' + route.replace('.js', ''), require('./routes/' + route));
+        });
+    });
 
-    app.use(express.static(__dirname + "/frontend/dist"));
+    app.use(config.mountPoint + '/', express.static(__dirname + '/frontend/dist'));
+
+    app.get(config.mountPoint + '/files/*', (req, res, next) => {
+        var location = path.resolve(config.uploadedBase + req.url.replace('files/', ''));
+        services.fileUtils.access(location).then(() => {
+            return res.sendFile(location);
+        }, (err) => {
+            return next(new CodedError("Not found", 404));
+        });
+    });
 
     var resultController = require('./controllers/resultController.js');
 

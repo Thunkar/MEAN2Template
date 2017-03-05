@@ -3,6 +3,6 @@ function CodedError(message, code){
     this.code = code;
 }
 
-CodedError.prototype = new Error();
+CodedError.prototype = Error.prototype;
 
 module.exports = CodedError;

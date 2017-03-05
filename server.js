@@ -17,10 +17,10 @@ services.init().then(() => {
 
     if (services.config.logLevel == "debug") {
         app.use((req, res, next) => {
-            var user = { username: "unknown" };
+            var user = { alias: "unknown" };
             if (req.session && req.session.user)
                 var user = req.session.user;
-            var logLine = "[" + user.username + "] " + req.originalUrl;
+            var logLine = "[" + user.alias + "] " + req.originalUrl;
             systemLogger.debug(logLine);
             next();
         });

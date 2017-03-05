@@ -14,6 +14,8 @@ const gulp = require('gulp'),
   fileUtils = require('./utils/services/fileUtils.js'),
   tscConfig = require('./tsconfig.json');
 
+ mongoose.Promise = Promise;
+
   
 function ensureExists(path) {
   return new Promise(function (resolve, reject) {

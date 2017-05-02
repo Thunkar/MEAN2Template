@@ -1,4 +1,5 @@
 const gulp = require('gulp'),
+  exec = require('child_process').exec,
   mkdirp = require('mkdirp'),
   del = require('del'),
   typescript = require('gulp-typescript'),
@@ -11,12 +12,12 @@ const gulp = require('gulp'),
   argv = require('yargs').argv,
   less = require('gulp-less'),
   slug = require('slug');
-  fileUtils = require('./utils/services/fileUtils.js'),
+fileUtils = require('./utils/services/fileUtils.js'),
   tscConfig = require('./tsconfig.json');
 
- mongoose.Promise = Promise;
+mongoose.Promise = Promise;
 
-  
+
 function ensureExists(path) {
   return new Promise(function (resolve, reject) {
     mkdirp(path, function (err) {
@@ -27,88 +28,6 @@ function ensureExists(path) {
     });
   });
 };
-
-gulp.task('clean', () => {
-  return del('frontend/dist/**/*');
-});
-
-gulp.task("downloadTypings", function () {
-  var stream = gulp.src("./typings.json")
-    .pipe(gulpTypings()); //will install all typingsfiles in pipeline. 
-  return stream; // by returning stream gulp can listen to events from the stream and knows when it is finished. 
-});
-
-gulp.task("copyTypings", function () {
-  return gulp.src("typings/**/*", { base: "./" })
-    .pipe(gulp.dest('frontend/src')); //will copy all typingsfiles to src.
-});
-
-function string_src(filename, string) {
-  var src = require('stream').Readable({ objectMode: true })
-  src._read = function () {
-    this.push(new gutil.File({
-      cwd: "",
-      base: "",
-      path: filename,
-      contents: new Buffer(string)
-    }))
-    this.push(null)
-  }
-  return src
-}
-
-gulp.task("emptybundle", (done) => {
-  ensureExists("./frontend/dist/bundle/app").then(() => {
-    fs.writeFile('./frontend/dist/bundle/app/main.js', "", done);
-  });
-});
-
-gulp.task("bundle", function () {
-  var builder = systemjsBuilder("./frontend/dist", './frontend/dist/systemjs.config.js');
-  return builder.bundle('app/main.js', {
-    minify: true,
-    mangle: false
-  })
-    .pipe(gulp.dest('./frontend/dist/bundle'));
-});
-
-
-gulp.task('compile', () => {
-  return gulp
-    .src(['frontend/src/**/*.ts', 'node_modules/typescript/lib/lib.es6.d.ts'])
-    .pipe(sourcemaps.init())          
-    .pipe(typescript(tscConfig.compilerOptions))
-    .pipe(sourcemaps.write('.'))      
-    .pipe(gulp.dest('frontend/dist'));
-});
-
-
-gulp.task('copy:foldlibs', () => {
-  return gulp.src(['node_modules/@angular/**/*', 'node_modules/rxjs/**/*',
-    'node_modules/bootstrap/**/*', 'node_modules/scrollreveal/**/*',
-    'node_modules/ng2-scrollspy/**/*', 'node_modules/ng2-scrollreveal/**/*', 'node_modules/ng2-interceptors/**/*',
-    'node_modules/ng2-bootstrap/**/*', 'node_modules/crypto-js/**/*',  
-    'node_modules/ng2-page-scroll/**/*','node_modules/angular2-google-maps/**/*',
-    'node_modules/swipebox/**/*', 'node_modules/moment/**/*', 'node_modules/jquery/**/*'],
-    { base: "./node_modules/" })
-    .pipe(gulp.dest('frontend/dist/lib'));
-});
-
-gulp.task('copy:indlibs', () => {
-  return gulp.src([
-    'node_modules/core-js/client/shim.min.js',
-    'node_modules/zone.js/dist/zone.js',
-    'node_modules/reflect-metadata/Reflect.js',
-    'node_modules/systemjs/dist/system.src.js'
-  ])
-    .pipe(gulp.dest('frontend/dist/lib'))
-});
-
-
-gulp.task('copy:assets', () => {
-  return gulp.src(['frontend/src/**/*', 'frontend/src/index.html', '!frontend/src/**/*.less','!frontend/src/**/*.ts', '!frontend/src/typings.json'], { base: './frontend/src/' })
-    .pipe(gulp.dest('frontend/dist'))
-});
 
 gulp.task('config:example', (done) => {
   var example = {
@@ -143,12 +62,12 @@ gulp.task('config:admin', () => {
       if (config.rsName)
         return { rs_name: config.rsName }
       else return undefined;
-    } (),
+    }(),
     server: function () {
       if (config.rsName)
         return { poolSize: config.dbPoolSize }
       else return undefined;
-    } ()
+    }()
   }
 
   if (config.rsName)
@@ -185,25 +104,19 @@ gulp.task('config:mail', () => {
   return gulp.src('initialData/mail/**/*').pipe(gulp.dest('uploaded/mail'));
 });
 
-
-gulp.task('less', function () {
-  return gulp.src('frontend/src/**/*.less', { base: './frontend/src/' })
-    .pipe(less()).on('error', (e) => { 
-    console.log(e);
-  })
-    .pipe(gulp.dest('frontend/dist'));
+gulp.task('build:dev', (cb) => {
+  exec('ng build', function (err, stdout, stderr) {
+    console.log(stdout);
+    console.log(stderr);
+    cb(err);
+  });
 });
 
-
-gulp.task('watch:frontend', function () {
-  gulp.watch(['frontend/src/**/*.less'], gulp.series('less'));
-  gulp.watch(['frontend/src/**/*', '!frontend/src/**/*.ts'], gulp.series('copy:assets'));
-  gulp.watch('frontend/src/**/*.ts', gulp.series('compile'));
+gulp.task('build:prod', (cb) => {
+  exec('ng build --prod', function (err, stdout, stderr) {
+    console.log(stdout);
+    console.log(stderr);
+    cb(err);
+  });
 });
-
-
-gulp.task('build:dev', gulp.series('clean', 'downloadTypings', "copyTypings", gulp.parallel('compile', 'copy:indlibs', 'copy:assets','less' ,'copy:foldlibs'), 'emptybundle'));
-
-gulp.task('build:prod', gulp.series('clean', 'downloadTypings', "copyTypings", gulp.parallel('compile', 'copy:indlibs', 'copy:assets', 'less' ,'copy:foldlibs'), 'bundle'));
-
 

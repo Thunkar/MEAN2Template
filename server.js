@@ -32,7 +32,7 @@ services.init().then(() => {
         });
     });
 
-    app.use(config.mountPoint + '/', express.static(__dirname + '/frontend/dist'));
+    app.use(config.mountPoint + '/', express.static(__dirname + '/frontendDist'));
 
     app.get(config.mountPoint + '/files/*', (req, res, next) => {
         var location = path.resolve(config.uploadedBase + req.url.replace('files/', ''));

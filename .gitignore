@@ -28,7 +28,7 @@ build/Release
 node_modules
 
 # compiled output
-/dist
+/frontendDist
 /tmp
 /out-tsc
 

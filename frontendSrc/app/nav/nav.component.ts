@@ -1,7 +1,6 @@
 import { Component, Inject, HostListener,OnInit } from '@angular/core';
 import { ScrollSpyModule, ScrollSpyService } from 'ng2-scrollspy';
 import { PageScrollInstance, PageScrollService } from 'ng2-page-scroll/ng2-page-scroll';
-import { DOCUMENT } from "@angular/platform-browser";
 
 @Component({
   selector: 'app-nav',
@@ -13,7 +12,7 @@ export class NavComponent implements OnInit {
   navScroll = 0;
   width = 0;
 
-  constructor(private scrollSpyService: ScrollSpyService, private pageScrollService: PageScrollService, @Inject(DOCUMENT) private document: Document) {
+  constructor(private scrollSpyService: ScrollSpyService, private pageScrollService: PageScrollService) {
     this.width = window.innerWidth;
   }
 

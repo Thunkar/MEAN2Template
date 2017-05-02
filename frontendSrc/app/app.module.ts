@@ -4,10 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 
 import { AlertModule } from 'ngx-bootstrap';
-import { NgsRevealModule } from 'ng2-scrollreveal';
+import { NgsRevealModule } from 'ng-scrollreveal';
 import { ScrollSpyModule } from 'ng2-scrollspy';
 import { Ng2PageScrollModule } from 'ng2-page-scroll';
-import { AgmCoreModule } from 'angular2-google-maps/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { NavComponent } from './nav/nav.component';
@@ -28,9 +27,6 @@ import { LocationStrategy, HashLocationStrategy } from '@angular/common';
     NgsRevealModule.forRoot(), 
     ScrollSpyModule.forRoot(),
     Ng2PageScrollModule.forRoot(),
-    AgmCoreModule.forRoot({
-      apiKey: 'yourapikey'
-    }),
     AlertModule.forRoot()
   ],
   providers: [{ provide: LocationStrategy, useClass: HashLocationStrategy }],

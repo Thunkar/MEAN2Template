@@ -11,8 +11,8 @@ const gulp = require('gulp'),
   systemjsBuilder = require('gulp-systemjs-builder'),
   argv = require('yargs').argv,
   less = require('gulp-less'),
-  slug = require('slug');
-fileUtils = require('./utils/services/fileUtils.js'),
+  slug = require('slug'),
+  fileUtils = require('./utils/services/fileUtils.js'),
   tscConfig = require('./tsconfig.json');
 
 mongoose.Promise = Promise;

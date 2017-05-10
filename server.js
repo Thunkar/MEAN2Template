@@ -38,7 +38,7 @@ services.init().then(() => {
         var location = path.resolve(config.uploadedBase + req.url.replace('files/', ''));
         services.fileUtils.access(location).then(() => {
             return res.sendFile(location);
-        }, (err) => {
+        }).catch((err) => {
             return next(new CodedError("Not found", 404));
         });
     });

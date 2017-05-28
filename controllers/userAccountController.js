@@ -169,7 +169,7 @@ exports.FBUnMerge = function (req, res, next) {
 
 exports.updateProfile = function (req, res, next) {
     var user;
-    User.find({ alias: req.session.user.alias }).exec().then((storedUser) => {
+    User.findOne({ alias: req.session.user.alias }).exec().then((storedUser) => {
         if (!storedUser) throw new CodedError("Not found", 404);
         user = storedUser;
         user.name = req.body.name;

@@ -105,7 +105,7 @@ gulp.task('config:mail', () => {
 });
 
 gulp.task('build:dev', (cb) => {
-  exec('ng build', function (err, stdout, stderr) {
+  exec('ng build', { maxBuffer: 1024 * 500 }, function (err, stdout, stderr) {
     console.log(stdout);
     console.log(stderr);
     cb(err);
@@ -113,7 +113,7 @@ gulp.task('build:dev', (cb) => {
 });
 
 gulp.task('build:prod', (cb) => {
-  exec('ng build --prod', function (err, stdout, stderr) {
+  exec('ng build --prod', { maxBuffer: 1024 * 500 }, function (err, stdout, stderr) {
     console.log(stdout);
     console.log(stderr);
     cb(err);

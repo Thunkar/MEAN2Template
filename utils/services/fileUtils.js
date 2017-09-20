@@ -67,6 +67,15 @@ exports.rmdirAsync = function (path) {
     })
 }
 
+exports.readFile = function (path) {
+    return new Promise((resolve, reject) => {
+        fs.readFile(path, (err, data) => {
+            if (err) return reject(err);
+            else return resolve(data);
+        })
+    })
+};
+
 exports.writeFile = function (path, data, format) {
     format = format ? format : 'utf8';
     return new Promise((resolve, reject) => {

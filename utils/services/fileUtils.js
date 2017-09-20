@@ -67,18 +67,15 @@ exports.rmdirAsync = function (path) {
     })
 }
 
-exports.writeFile = function (data, path) {
-    return new Promise(function (resolve, reject) {
-        exports.ensureExists(path).then(function () {
-            fs.writeFile(data, path, function (err) {
-                if (err) return reject(err);
-                else return resolve();
-            })
-        }, function (err) {
+exports.writeFile = function (path, data, format) {
+    format = format ? format : 'utf8';
+    return new Promise((resolve, reject) => {
+        fs.writeFile(path, data, format, (err) => {
             if (err) return reject(err);
+            else return resolve();
         });
-    })
-}
+    });
+};
 
 exports.access = function(path) {
     return new Promise((resolve, reject) =>{
